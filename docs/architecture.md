@@ -25,4 +25,6 @@ This system automatically detects chess moves of an over the board chess game. I
 * **UI/Voice Output**
 * **Game Logging/Storage**
 
-## Event Diagram
+## Flowchart Diagram
+
+<img width="766" height="646" alt="Overboard Chess AI Flowchart drawio" src="https://github.com/user-attachments/assets/0b9e5f0c-c5d4-446d-afe8-1defd9ed3a51" />
