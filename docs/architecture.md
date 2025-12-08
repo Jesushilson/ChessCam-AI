@@ -75,3 +75,15 @@ This system automatically detects chess moves of an over the board chess game. I
 
    After the game is over, the game state manager will store the game in the selected storage to be used again later.
 
+## State Machine Design
+
+### States:
+
+* **Idle State** - The program is waiting for some command to indicate what type of game is to be played.
+* **Game Setup** - The camera is calibrating the board set up to ensure that the game is ready to start (Illegal board doesn't start).
+* **Player VS Player** - The State Manager expects moves from openCV program. Updates board according to the event.
+* **Player VS AI** - The State Manager expects moves from both openCV and Chess Engine. Updates board according to the event.
+* **AI Thinking** - The Chess engine is thinking of a move based ont the current board state.
+* **Player Thinking** - Whether playing against AI or another player, here the system waits for the player to make a move.
+* **Error** - If the board is currenty in an illegal state then the system will wait for it to be fixed before going on.
+* **Paused** - Game is paused and the state is saved to be played at a different time.
