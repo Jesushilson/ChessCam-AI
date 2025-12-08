@@ -44,3 +44,34 @@ This system automatically detects chess moves of an over the board chess game. I
 ## Flowchart Diagram
 
 <img width="1325" height="1132" alt="Screenshot 2025-12-07 173116" src="https://github.com/user-attachments/assets/227d20b2-d641-4452-bfa0-139a531ee918" />
+
+## Communication Data Flow 
+
+**1. Camera → Pi:**
+
+   The camera is connected to the PI with a USB cable. The camera sends constant video frames to the PI when prompted (When a game has started). The camera will capture the game in a fairly low frame rate due to the slow pace of chess (Future advancement can improve this).
+   
+**3. Pi → Computer Vision:**
+
+   The Pi communicates with an openCV program that will read the video frames as they come in. If the program detects any kind of change in the board state then an event is triggered. However, if the board state hasn't changed then the PI will disgard the video frame and move on.
+   
+**4. Computer Vision → Event System:**
+
+   When the openCV program detects an event, it will send the imformation to the event system. This event system will execute the correct code depending on the type of event. If the move is legal then we can update the current game state.
+   
+**5. Event System → Game State Manager:**
+
+   The Game State Manager recieves the command on what the board state should look like and updates accordingly. If the user has AI mode on then it will speak to the Chess Engine.
+
+**6. Game State Manager ↔ Chess Engine:**
+
+   The Chess Engine will recieve the current game state. If the player is playing against AI, then the engine will produce a move for it's turn. It will send that update back to manager. Alternatively, if the player just wants feedback then the engine will just read the current state and produce a score for the move the player just played.
+
+**7. UI / App ↔ Game State Manager:**
+
+   The Game State manager will then send updated game state to the UI app. If the user decides to terminate the game early or if the user wants to delete a previous move, then the app will notify the manager accordingly.
+
+**8. Game State Manager → Storage:**
+
+   After the game is over, the game state manager will store the game in the selected storage to be used again later.
+
