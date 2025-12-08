@@ -19,24 +19,27 @@ This system automatically detects chess moves of an over the board chess game. I
 
 * **Camera/Frame Capture**
   * Captures the board from a top down view.
-  * Outputs video frames of the games.
+  * Outputs continuous video frames of the board.
 * **Computer Vision**
   * Reads the video frames.
-  * Outputs the current board position.
+  * Outputs detected move events or changes in board state.
 * **Event System**
   * Based on the current board position, it will produce an event.
   * This event will trigger an outcome in game state manager.
+  * Emits events (e.g., moveDetected, pieceCaptured, illegalMove) consumed by the Game State Manager.
 * **Game State Manager**
   * This will manage the games states that we have had so far.
   * It will also talk to the game engine to update the current game state.
 * **Chess Engine**
   * The game engine will provide moves based on the current state of the game.
+  * Provides recommended moves, evaluations, and analysis when AI mode is enabled.
   * If the player isn't playing against AI, then this will be skipped.
 * **UI/Voice Output**
   * This will take the move that the Chess engine produced and turn it into an AI voice to inform the player of the move.
   * It will also update the UI on the app's version of the current game state regardless if the player is playing agaisnt AI or another player.
 * **Game Logging/Storage**
   * After the game is over, all the moves saved in the game state manager is sent for storage where the user on the app can review anytime.
+  * Stores PGN or move history for export.
 
 ## Flowchart Diagram
 
