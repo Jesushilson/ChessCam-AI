@@ -94,12 +94,23 @@ This system automatically detects chess moves of an over the board chess game. I
 
 * move_detected - Anytype of move is detected.
 * board_moved - Board moved and messed the calibration of the camera.
-* illeagal_moved - A move was played that is not allowed/possible.
+* illegal_moved - A move was played that is not allowed/possible.
+* no_change - User indicated that they played a movee but there was no change in board state.
 
 #### User Initiated Events:
 
 * start_game_mode - User selects the type of game mode to play and starts it.
 * undo_move - User has the ability to undo the last move, incase the system read the move incorrectly.
 * review_game - User selects a game to review and sends a request to the PI to retrieve that said game.
-* end_game - If the user wants to end the game early and has no future plans then this option will be good.
-* 
+* end_game - If the user wants to end the game early and has no future plans then this option will be givem.
+* pause_game - User can pause the game at anystate. This state will be saved for re-use later.
+
+#### Chess Engine Events:
+
+* ai_move_ready - AI's move is sent to the state manager.
+* evaluation_ready - AI's game evaluation is ready.
+
+#### System Events: 
+
+* game_finished - Game has ended and the system does the appropriate actions.
+* connection_failed - Failed to connect to the raspberry pi. 
