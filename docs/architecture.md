@@ -7,10 +7,10 @@ This system automatically detects chess moves of an over the board chess game. I
 ## Major Features 
 
 * **Camera Detection** - Camera will be set up over the board to capture every move that happens in the game and is sent to the phone
-* **Move Validation** - Provide the ability to comfirm moves through the device, allowing for players time to make sure the made the right move.
-* **Play VS AI** - Play aganist an AI bot that will have different levels of skill.
+* **Move Validation** - Provide the ability to comfirm moves through the device, allowing for players time to make sure they made the right move.
+* **Play VS AI** - Play aganist an AI bot that will have different options for level of skill.
 * **Annouce AI Moves** - The phone will anounce the AI's moves and will have some personality to each move that they make.
-* **Move Recording** - Games will be recorded where useres can have the ability to go back an and watch any game they want.
+* **Move Recording** - Games will be recorded where users can have the ability to go back and watch any game they want.
 * **Review Mode** - Users will be able to review games to see where they went wrong or struggled in any of their games. It will use Stockfish as a way of providing feedback on these moves.
 * **Allow for Alternative Move Tree** - When looking back at old games, be able to try an alternative move to the one that was played in the actual game. Stockfish will provide feedback on whether that was a better move.
 * **Player Vs Player Recording** - Games between 2 real players will also be recorded for fun reviews and learning.
@@ -32,8 +32,8 @@ This system automatically detects chess moves of an over the board chess game. I
   * It will also talk to the game engine to update the current game state.
 * **Chess Engine**
   * The game engine will provide moves based on the current state of the game.
-  * Provides recommended moves, evaluations, and analysis when AI mode is enabled.
   * If the player isn't playing against AI, then this will be skipped.
+  * Provides recommended moves, evaluations, and analysis when AI mode is enabled.
 * **UI/Voice Output**
   * This will take the move that the Chess engine produced and turn it into an AI voice to inform the player of the move.
   * It will also update the UI on the app's version of the current game state regardless if the player is playing agaisnt AI or another player.
@@ -43,7 +43,7 @@ This system automatically detects chess moves of an over the board chess game. I
 
 ## Flowchart Diagram
 
-<img width="1325" height="1132" alt="Screenshot 2025-12-07 173116" src="https://github.com/user-attachments/assets/227d20b2-d641-4452-bfa0-139a531ee918" />
+<img width="1122" height="978" alt="Screenshot 2025-12-09 212115" src="https://github.com/user-attachments/assets/5b8cb9b5-6e1b-4f6b-8187-b17c500990fb" />
 
 ## Communication Data Flow 
 
@@ -80,10 +80,10 @@ This system automatically detects chess moves of an over the board chess game. I
 ### States:
 
 * **Idle State** - The program is waiting for some command to indicate what type of game is to be played.
-* **Game Setup** - The camera is calibrating the board set up to ensure that the game is ready to start (Illegal board doesn't start).
+* **Game Setup** - The camera is calibrating the board set up to ensure that the game is ready to start (An illegal board doesn't start).
 * **Player VS Player** - The State Manager expects moves from openCV program. Updates board according to the event.
 * **Player VS AI** - The State Manager expects moves from both openCV and Chess Engine. Updates board according to the event.
-* **AI Thinking** - The Chess engine is thinking of a move based ont the current board state.
+* **AI Thinking** - The Chess engine is thinking of a move based on the current board state.
 * **Player Thinking** - Whether playing against AI or another player, here the system waits for the player to make a move.
 * **Error** - If the board is currenty in an illegal state then the system will wait for it to be fixed before going on.
 * **Paused** - Game is paused and the state is saved to be played at a different time.
@@ -102,7 +102,7 @@ This system automatically detects chess moves of an over the board chess game. I
 * start_game_mode - User selects the type of game mode to play and starts it.
 * undo_move - User has the ability to undo the last move, incase the system read the move incorrectly.
 * review_game - User selects a game to review and sends a request to the PI to retrieve that said game.
-* end_game - If the user wants to end the game early and has no future plans then this option will be givem.
+* end_game - If the user wants to end the game early and has no future plans then this option will be give.
 * pause_game - User can pause the game at anystate. This state will be saved for re-use later.
 
 #### Chess Engine Events:
@@ -114,3 +114,36 @@ This system automatically detects chess moves of an over the board chess game. I
 
 * game_finished - Game has ended and the system does the appropriate actions.
 * connection_failed - Failed to connect to the raspberry pi. 
+
+## Multithreading
+
+**Camera Thread** 
+* Constantly check every few seconds to see if there is any large changes on the board.
+* If the user confirms they just played a move, then the camera will start to record the game at 10 frames/s for about 6 sec.
+* Can still run even if the system is proccessing a different move or waiting for an AI move.
+
+**Cmaera Vision Proccessing Thread**
+* Proccesses the video frames as they come in.
+* These frames will be proccessed in a queue.
+* Calls events accordingly.
+* Runs without having to freeze the UI, or engine.
+
+**Event Bus Thread**
+* This will control what certain events will do.
+* It will queue events as they come in.
+* Dispatches events to the Game State Manager.
+* This keeps the events in the correct order.
+
+**Game State Manger Thread**
+* Keeps track of all board states so far.
+* Makes the correct updates as the game goes on.
+* Isolated to keep from different things interacting.
+
+**Chess Engine Thread**
+* Fetches a move or evaluates a move based on the current board state.
+* Must run independently to not hinder other proccesses like CV or State Manager.
+
+**Phone Connection Thread**
+* Handles any updates from the phone.
+* Reads all commands that the phone sends.
+* Sends UI updates to the phone.
