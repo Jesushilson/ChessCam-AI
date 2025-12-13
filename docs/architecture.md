@@ -152,3 +152,26 @@ This system automatically detects chess moves of an over the board chess game. I
 * Handles any updates from the phone.
 * Sends commands to Main Thread via command queue.
 * Sends UI updates to the phone.
+
+### Concurrency Diagram:
+<img width="1550" height="1101" alt="image" src="https://github.com/user-attachments/assets/b43fe15d-96b7-4b60-9da6-bd28a1afdd58" />
+
+### Deadlock/Livelock Avoidance
+
+#### Deadlock - Deadlock is the stalling of two different threads waiting for eachother to release a rescource that the other is using, causing an endless idle.
+
+**How This Design Avoids Deadlock:**
+- None of the Threads lock any shared data.
+- Only the Main Thread is allowd to make updates to the board, relieving the need for multiple board accesses.
+- The Threads have Unidirectional Communication which allows for smooth flow of information. It also ensures that no thread depends on receiving a message back from another thread before it continues.
+- Queues act as a buffer make sure there is no issues with relaying information.
+  
+#### Livelock - Livelock happens when 2 threads are not stalled but are constantly reacting to eachother causeing a loop of interation and making no progress.
+
+**How This Design Avoids Livelock:**
+- No 2 threads react directly to each other.
+- Only the Main Thread is allowed to make state trasfermations.
+- Since engine and CV can't trigger each other, it aviods any issues that may arise.
+
+
+
