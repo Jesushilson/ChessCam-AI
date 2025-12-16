@@ -11,11 +11,11 @@
 ### Software/Framwork
 - Python 3.11
 - OpenCV
-- Multithreading
+- [Multithreading]([url](https://github.com/Jesushilson/Overboard-Chess-AI/blob/main/docs/architecture.md#multithreading))
 - Flask
 - Flutter/Dart(Mobile APP)
 - Stockfish(Chess Engine)
-- Queue Module for thread communication 
+- [Queue Module for thread communication ](https://github.com/Jesushilson/Overboard-Chess-AI/blob/main/docs/architecture.md#multithreading)
 
 ### OS
 - Raspberry Pi OS lite
