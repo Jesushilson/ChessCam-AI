@@ -26,7 +26,6 @@ Please use the following links to learn more about the proccess of this project.
 
 - **[Success Metrics](success-metrics.md)**  
 - **[Timeline](timeline.md)**  
-- **[Risks & Mitigations](risks.md)**  
 
 ---
 
