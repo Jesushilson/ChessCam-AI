@@ -54,12 +54,12 @@ def detect_corners(image):
                 
                 # Clean up the formatting
                 corners = approx.reshape(4, 2).astype(np.float32)
-                return corners
+                return order_corners(corners)
 
     # Unable to find the right shape 
     return None
 
-# Order the corners to always have a set order for the homography
+# helper function to Order the corners to always have a set order for the homography
 def order_corners(corners):
     # Calculate the center of the board 
     center = corners.mean(axis=0)
@@ -78,3 +78,22 @@ def order_corners(corners):
             ordered[3] = pt  # bottom-right
 
     return ordered
+
+# Here we can warp the image so it fits in a 400x400 radius where
+# Where all the corners will match 
+def warp_board(image, corners):
+    # Where each corner should matcch up
+    desination_img = np.float32([
+        [0,0],
+        [WARP_SIZE],
+        [0, WARP_SIZE],
+        [WARP_SIZE, WARP_SIZE]
+    ])
+    
+    # Retrieves the matrix that descirbes how each corner needs to be stretched to fit in desination_img 
+    matrix = cv.getPerspectiveTransform(corners, desination_img)
+
+    # Applies the math to every pixel to actually fit that size
+    warped = cv.warpPerspective(image, matrix, WARP_SIZE, WARP_SIZE)
+
+
