@@ -58,3 +58,23 @@ def detect_corners(image):
 
     # Unable to find the right shape 
     return None
+
+# Order the corners to always have a set order for the homography
+def order_corners(corners):
+    # Calculate the center of the board 
+    center = corners.mean(axis=0)
+    # Create an empty array to hold our ordered 
+    ordered = np.zeros((4,2), dtype=np.float32)
+
+    # Go through each corner and calculate which slot it goes to based on the center
+    for pt in corners:
+        if pt[0] < center[0] and pt[1] < center[1]:
+            ordered[0] = pt  # top-left
+        elif pt[0] > center[0] and pt[1] < center[1]:
+            ordered[1] = pt  # top-right
+        elif pt[0] < center[0] and pt[1] > center[1]:
+            ordered[2] = pt  # bottom-left
+        else:
+            ordered[3] = pt  # bottom-right
+
+    return ordered
