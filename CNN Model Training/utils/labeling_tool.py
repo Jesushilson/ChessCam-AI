@@ -3,16 +3,17 @@ import numpy as np
 import os
 import shutil
 from pathlib import Path
-import corner_selctor 
+import corner_selector 
 import json
 
 
 IMAGE_FOLDER = "data/raw"
 OUTPUT_FOLDER = "data/squares"
+LABEL_FILE = "data/square_labels.json"
 
 WARP_SIZE = 400 # After homography the board becomes a 400×400 image
 SQUARE_SIZE = WARP_SIZE // 8 # Each square will be about 50x50 pictures
-OVERLAP = 8 # How much each image will bleed into other neigboring squares
+OVERLAP = 8 # How much each image will bleed into other neighboring squares
 
 TRAIN_RATIO = 0.8
 VAL_RATIO = 0.1
@@ -58,7 +59,7 @@ def cut_into_squares(board_images):
     squares = []
     files = "abcdefgh"
     i = 0
-    #  go throuth the images 
+    #  go through the images 
     while True:
         if i >= len(board_images):
             break
@@ -69,13 +70,13 @@ def cut_into_squares(board_images):
         
 
         # Check if the corners were already selected
-        corners = corner_selctor.load_or_select_corners(image, board_images[i])
+        corners = corner_selector.load_or_select_corners(image, board_images[i])
         image = cv.resize(image, (1920, 1080))
         warped = warp_board(image, corners)
 
         # Check to see if the corners were selected correctly
         if not is_warp_valid(warped):
-            corner_selctor.delete_corners(board_images[i])
+            corner_selector.delete_corners(board_images[i])
             continue
         i += 1
         # Then cut image into squares
@@ -110,3 +111,82 @@ def cut_into_squares(board_images):
     return squares
 
 
+def labeling_tool(square):
+
+    KEY_MAP = {
+        ord('e'): "empty",
+        ord('p'): "white_pawn",
+        ord('P'): "black_pawn",
+        ord('n'): "white_knight",
+        ord('N'): "black_knight",
+        ord('b'): "white_bishop",
+        ord('B'): "black_bishop",
+        ord('r'): "white_rook",
+        ord('R'): "black_rook",
+        ord('q'): "white_queen",
+        ord('Q'): "black_queen",
+        ord('k'): "white_king",
+        ord('K'): "black_king",
+    }
+
+    # Check if already labeled before showing anything
+    if os.path.exists(LABEL_FILE):
+        with open(LABEL_FILE, 'r') as f:
+            all_squares = json.load(f)
+        if square["name"] in all_squares:
+            return  # skip immediately, no popup
+
+    display = cv.resize(square["image"], (300, 300))
+    instruction = "Type the corresponding letter of this piece(Black Uppercase, White Lowercase)"
+
+    cv.imshow("Label Square", display)
+    cv.putText(display, instruction, (20, 40),
+                    cv.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 255), 2)
+    while True:
+        key = cv.waitKey(0)
+
+        if key == 27:  # ESC
+            print("Quitting!")
+            cv.destroyAllWindows()
+            return
+        
+        elif key == ord('s'):  # skip
+            break
+
+        elif key in KEY_MAP:
+            label = KEY_MAP[key]
+            save_square(square, label)
+            break
+        
+        else:
+            print("Invalid key, try again")
+            # Loop continues, waiting for valid key
+
+
+def save_square(square, label):
+
+    if os.path.exists(LABEL_FILE):
+        with open(LABEL_FILE, 'r') as f:
+            # Grab every square that we have saved
+            all_squares = json.load(f)
+    else:
+            all_squares = {}
+
+    # We already have this square saved
+    if square["name"] in all_squares:
+        return
+    # save the image of the square
+    filename = os.path.join(OUTPUT_FOLDER, square["name"] + ".png")
+    cv.imwrite(filename, square["image"])
+
+    all_squares[square["name"]] = label
+
+    with open(LABEL_FILE, 'w') as f:
+        json.dump(all_squares, f, indent=4)
+
+
+
+
+squares = cut_into_squares(board_images)
+for square in squares:
+    labeling_tool(square)
