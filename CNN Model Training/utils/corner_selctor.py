@@ -14,8 +14,8 @@ def manual_corner_selection(image):
     # Will hold the coordinates of the corners 
     corners = []
     display = image.copy()
-    labels = ["Click the TOP LEFT corner", "Click the TOP RIGHT corner",
-              "Click Bottom Left corner", "Click the BOTTOM RIGHT corner "]
+    labels = ["Click the BLACK's LEFT corner", "Click the BLACK's RIGHT corner",
+              "Click WHITE's Left corner", "Click the WHITE's RIGHT corner "]
     
 
     def mouse_callback(event, x, y, flags, param):
@@ -61,6 +61,21 @@ def load_or_select_corners(image, img_path):
 
     with open(CORNERS_FILE, 'w') as f:
         json.dump(all_corners, f, indent=4)
-        print("Corners saved for next time!")
 
     return corners
+
+# Deletes the saved corners
+def delete_corners(image_path):
+    image_name = os.path.basename(image_path)
+    
+    if os.path.exists(CORNERS_FILE):
+        with open(CORNERS_FILE, 'r') as f:
+            all_corners = json.load(f)
+        
+        # Remove this image's corners
+        if image_name in all_corners:
+            del all_corners[image_name]
+        
+        with open(CORNERS_FILE, 'w') as f:
+            json.dump(all_corners, f, indent=4)
+            print(f"Deleted corners for {image_name}")

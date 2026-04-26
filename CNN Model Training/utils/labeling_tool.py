@@ -42,30 +42,71 @@ def warp_board(image, corners):
     warped = cv.warpPerspective(image, matrix, (WARP_SIZE, WARP_SIZE))
 
     return warped
+# Checks if the warped image looks valid by sampling the center region.
+# If the center is mostly black, the warp failed.
+def is_warp_valid(warped):
+    # Grab the center 100x100 region of the warped board
+    center = warped[150:250, 150:250]
+    
+    # Calculate average brightness
+    avg_brightness = np.mean(center)
+    
+    # If average brightness is very low, warp is probably wrong
+    return avg_brightness > 30 
 
-
-def check_for_unsaved_corners(board_images):
-    # Make a list of warped images
-    warped_imgs = []
-    for i in range(len(board_images)):
+def cut_into_squares(board_images):
+    squares = []
+    files = "abcdefgh"
+    i = 0
+    #  go throuth the images 
+    while True:
+        if i >= len(board_images):
+            break
+        img_name = os.path.basename(board_images[i])
+        img_name = os.path.splitext(img_name)[0]  # remove .png extension
 
         image = cv.imread(board_images[i])
-        image = cv.resize(image, (1080, 1920))
+        
 
         # Check if the corners were already selected
         corners = corner_selctor.load_or_select_corners(image, board_images[i])
+        image = cv.resize(image, (1920, 1080))
         warped = warp_board(image, corners)
-        
-        # Add warped image to list
-        warped_imgs.append(warped)
+
+        # Check to see if the corners were selected correctly
+        if not is_warp_valid(warped):
+            corner_selctor.delete_corners(board_images[i])
+            continue
+        i += 1
+        # Then cut image into squares
+        for row in range(8):
+            rank = str(8- row)
+
+            for col in range(8):
+                file_letter = files[col]
+                square_name = files[col] + rank
+
+                # Calculate the top-left corner of this square
+                x = col * SQUARE_SIZE
+                y = row * SQUARE_SIZE
+
+                # Add overlap padding, clamped to image boundaries
+                x1 = max(0, x - OVERLAP)
+                y1 = max(0, y - OVERLAP)
+                x2 = min(WARP_SIZE, x + SQUARE_SIZE + OVERLAP)
+                y2 = min(WARP_SIZE, y + SQUARE_SIZE + OVERLAP)
+
+                # Cut the square out of the warped image
+                square = warped[y1:y2, x1:x2]
+                
+                # Keep track of which square this is
+                squares.append({
+                    "image": square,
+                    "row": row,
+                    "col": col,
+                    "name": img_name + "_" + square_name  # e.g. "a8", "b7" etc
+                })
     
-    return warped_imgs
-
-
-warped_imgs = check_for_unsaved_corners(board_images)
-    
-
-
-
+    return squares
 
 
