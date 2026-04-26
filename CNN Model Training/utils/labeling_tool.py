@@ -186,7 +186,7 @@ def save_square(square, label):
 
 
 
-
-squares = cut_into_squares(board_images)
-for square in squares:
-    labeling_tool(square)
+def check_labels():
+    squares = cut_into_squares(board_images)
+    for square in squares:
+        labeling_tool(square)
