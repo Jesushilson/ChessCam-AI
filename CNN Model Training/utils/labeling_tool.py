@@ -3,6 +3,7 @@ import numpy as np
 import os
 import shutil
 from pathlib import Path
+import corner_selctor 
 import json
 
 
@@ -23,7 +24,6 @@ board_images = [
     if f.endswith('.png') or f.endswith('.jpg')
 ]
 
-
 # Here we can warp the image so it fits in a 400x400 radius where
 # Where all the corners will match 
 def warp_board(image, corners):
@@ -43,11 +43,27 @@ def warp_board(image, corners):
 
     return warped
 
-image = cv.imread(board_images[25])
-image = cv.resize(image, (800, 600))
-# cv.imshow("test Board", image)
-# cv.waitKey(0)  # press any key to continue
-# cv.destroyWindow("test Board")
+
+def check_for_unsaved_corners(board_images):
+    # Make a list of warped images
+    warped_imgs = []
+    for i in range(len(board_images)):
+
+        image = cv.imread(board_images[i])
+        image = cv.resize(image, (1080, 1920))
+
+        # Check if the corners were already selected
+        corners = corner_selctor.load_or_select_corners(image, board_images[i])
+        warped = warp_board(image, corners)
+        
+        # Add warped image to list
+        warped_imgs.append(warped)
+    
+    return warped_imgs
+
+
+warped_imgs = check_for_unsaved_corners(board_images)
+    
 
 
 
