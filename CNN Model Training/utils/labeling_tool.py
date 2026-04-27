@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+import random
 import os
 import shutil
 from pathlib import Path
@@ -184,9 +185,54 @@ def save_square(square, label):
     with open(LABEL_FILE, 'w') as f:
         json.dump(all_squares, f, indent=4)
 
+# Split the data into the right folders for testing
+def split_data():
+
+    # Load the labels
+    if not os.path.exists(LABEL_FILE):
+        print("No label file found!")
+        return
+    
+    with open(LABEL_FILE, 'r') as f:
+        labels = json.load(f)
+
+    # Shuffle for randomness
+    items = list(labels.items())
+    random.shuffle(items)
+
+    # Calculate split sizes
+    n_train = int(len(items) * TRAIN_RATIO)
+    n_val = int(len(items) * VAL_RATIO)
+
+    splits = {
+        "train": items[:n_train],
+        "val":   items[n_train:n_train + n_val],
+        "test":  items[n_train + n_val:]
+    }
+
+    moved = 0
+
+    for split, squares in splits.items():
+        for name, label in squares:
+            src = os.path.join(OUTPUT_FOLDER, name + ".png")
+            dst_folder = os.path.join(OUTPUT_FOLDER, split, label)
+            dst = os.path.join(dst_folder, name + ".png")
+
+            os.makedirs(dst_folder, exist_ok=True)
+
+            if os.path.exists(src):
+                shutil.move(src, dst)
+                moved += 1
+    
+    print("Done")
+    print("Moved: " + str(moved))
 
 
 def check_labels():
     squares = cut_into_squares(board_images)
     for square in squares:
         labeling_tool(square)
+
+    split_data()
+
+check_labels()
