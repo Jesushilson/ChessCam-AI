@@ -4,6 +4,7 @@ import random
 import os
 import shutil
 from pathlib import Path
+from augmentaion import augment_class
 import corner_selector 
 import json
 
@@ -232,7 +233,19 @@ def check_labels():
     squares = cut_into_squares(board_images)
     for square in squares:
         labeling_tool(square)
-
+    # Split the data
     split_data()
+    # Augment the data
+    splits_dict = {
+        "train": 200, # Have at least 200 photos for each category
+        "test": 20, # Have at least 20 photos for each category
+        "val": 20 # Have at least 20 photos for each category
+    }
+
+    for split, target_count in splits_dict.items():
+        split_folder = os.path.join("data/squares", split)
+        for class_name in os.listdir(split_folder):
+            class_folder = os.path.join(split_folder, class_name)
+            augment_class(class_folder, target_count)
 
 check_labels()

@@ -40,7 +40,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr= 0.001)
 criterion = torch.nn.CrossEntropyLoss()
 
 
-epochs = 10
+epochs = 50
 
 model.train()
 print("STARTING TRAINING")

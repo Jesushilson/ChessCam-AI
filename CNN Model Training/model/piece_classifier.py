@@ -25,11 +25,20 @@ class PieceClassifier(nn.Module):
             kernel_size=3,
             padding= 1
         )
+        self.conv3 = nn.Conv2d(
+            in_channels=32,
+            out_channels=64,
+            kernel_size=3,
+            padding= 1
+        )
         self.pool = nn.MaxPool2d(2, 2)
-
+        
+        
         # Fully connected layers
-        self.fc1 = nn.Linear(4608, 128)
-        self.fc2 = nn.Linear(128, 13)
+        self.dropout = nn.Dropout(0.2)
+        self.fc1 = nn.Linear(2304, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 13)
 
     def forward(self, x):
         # x is passed through the first convolutional 
@@ -37,15 +46,22 @@ class PieceClassifier(nn.Module):
         x = F.relu(x)
         x = self.pool(x)
 
-        x = self.conv2(x)     # (N, 32, 16, 16)
+        x = self.conv2(x)     # (N, 32, 25, 25)
         x = F.relu(x)
         x = self.pool(x)      # (N, 32, 8, 8)
 
-        x = torch.flatten(x, 1)  # (N, 32*8*8)
+        x = self.conv3(x)     # (N, 64, 12, 12)
+        x = F.relu(x)
+        x = self.pool(x)      # (N, 64, 6, 6)
+
+        x = torch.flatten(x, 1)  # (N, 64*6*6)
 
         x = self.fc1(x)       # (N, 128)
         x = F.relu(x)
-        x = self.fc2(x)       # (N, num_classes)  <-- “logits” (raw scores)
+        x = self.dropout(x)
+        x = self.fc2(x)       # (N, num_classes) 
+        x = F.relu(x)
+        x = self.fc3(x)
 
         return x
     
