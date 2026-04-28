@@ -1,12 +1,12 @@
-import os
-import shutil
-import random
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from piece_classifier import PieceClassifier
+from pretrained_model import PreTrainedPieceClassifier
 from sklearn.metrics import classification_report
-
+import matplotlib.pyplot as plt
+import numpy as np
+import plotting
 
 
 TRAIN_FOLDER = "data/squares/train"
@@ -34,68 +34,129 @@ val_loader   = DataLoader(val_data,   batch_size=32, shuffle=False)
 test_loader  = DataLoader(test_data,  batch_size=32, shuffle=False)
 
 
-# Define model
-model = PieceClassifier()
-optimizer = torch.optim.Adam(model.parameters(), lr= 0.001)
 criterion = torch.nn.CrossEntropyLoss()
 
 
-epochs = 50
 
-model.train()
-print("STARTING TRAINING")
-for epoch in range(epochs):
-    total_loss = 0
-    for images, labels in train_loader:
-        # Forward pass
-        outputs = model(images)
-
-        # Compute loss
-        loss = criterion(outputs, labels)
-        
-        # Zero gradients
-        optimizer.zero_grad()
-
-        # Backprop
-        loss.backward()
-
-        # Update weights
-        optimizer.step()
-        total_loss += loss.item()
-
-    # Validation after each epoch
-    model.eval()
-    val_correct = 0
-    val_total = 0
-    with torch.no_grad():
-        for images, labels in val_loader:
+def train_model(model, optimizer, epochs):
+    model.train()
+    val_accuracies = []
+    train_losses = []
+    for epoch in range(epochs):
+        total_loss = 0
+        for images, labels in train_loader:
+            # Forward pass
             outputs = model(images)
-            predictions = outputs.argmax(dim=1)
-            val_correct += (predictions == labels).sum().item()
-            val_total += labels.size(0)
-    avg_loss = total_loss / len(train_loader)
-    val_acc = val_correct / val_total
-    print(f"Epoch {epoch+1} | Loss: {avg_loss:.4f} | Val Accuracy: {val_acc*100:.2f}%")
+
+            # Compute loss
+            loss = criterion(outputs, labels)
+            
+            # Zero gradients
+            optimizer.zero_grad()
+
+            # Backprop
+            loss.backward()
+
+            # Update weights
+            optimizer.step()
+            total_loss += loss.item()
+
+        # Validation after each epoch
+        model.eval()
+        val_correct = 0
+        val_total = 0
+        with torch.no_grad():
+            for images, labels in val_loader:
+                outputs = model(images)
+                predictions = outputs.argmax(dim=1)
+                val_correct += (predictions == labels).sum().item()
+                val_total += labels.size(0)
+
+        avg_loss = total_loss / len(train_loader)
+        val_acc = val_correct / val_total
+
+        train_losses.append(avg_loss)
+        val_accuracies.append(val_acc * 100)
+
+        print(f"Epoch {epoch+1} | Loss: {avg_loss:.4f} | Val Accuracy: {val_acc*100:.2f}%")
+    
+    return train_losses, val_accuracies
 
 
-model.eval()
-correct = 0
-total = 0
-all_preds = []
+# ----------Start Train ----------
+
+# Define models
+# Note that both models use the exact same data 
+homemade_model = PieceClassifier()
+homemade_optimizer = torch.optim.Adam(homemade_model.parameters(), lr= 0.001)
+
+pretrained_model = PreTrainedPieceClassifier()
+pretrained_optimizer = torch.optim.Adam(pretrained_model.parameters(), lr= 0.001)
+
+EPOCHS = 40
+
+
+# Lets start with my model
+print("----STARTING HOMEMADE TRAINING----")
+homemade_losses, homemade_accs = train_model(homemade_model, homemade_optimizer, EPOCHS)
+print("----HOMEMADE DONE----")
+
+print("----STARTING ResNet18 TRAINING----")
+pretrained_losses, pretrained_accs = train_model(pretrained_model, pretrained_optimizer, EPOCHS)
+print("----ResNet18 DONE----")
+
+
+# Plot both on same graph
+plotting.plot_comparison(homemade_losses, homemade_accs, pretrained_losses, pretrained_accs)
+
+# ----------Start Testing----------
+
+homemade_model.eval()
+pretrained_model.eval()
+
+homemade_preds = []
+pretrained_pred = []
 all_labels = []
 
+print("\n----TESTING HOMEMADE----\n")
+all_labels = [] 
+correct = 0
+total = 0
 with torch.no_grad():
     for images, labels in test_loader:
-        outputs = model(images)
+        outputs = homemade_model(images)
         predictions = outputs.argmax(dim=1)
 
-        all_preds.extend(predictions.tolist())
+        homemade_preds.extend(predictions.tolist())
         all_labels.extend(labels.tolist())
 
         correct += (predictions == labels).sum().item()
         total += labels.size(0)
 
 accuracy = correct / total
-print(f"Test Accuracy: {accuracy * 100:.2f}%")
-print(classification_report(all_labels, all_preds, 
+print(f"Test Accuracy Of Homemade: {accuracy * 100:.2f}%")
+print(classification_report(all_labels, homemade_preds, 
       target_names=train_data.classes))
+
+print("\n----TESTING ResNet18----\n")
+all_labels = [] 
+correct = 0
+total = 0
+with torch.no_grad():
+    for images, labels in test_loader:
+        outputs = pretrained_model(images)
+        predictions = outputs.argmax(dim=1)
+
+        pretrained_pred.extend(predictions.tolist())
+        all_labels.extend(labels.tolist())
+
+        correct += (predictions == labels).sum().item()
+        total += labels.size(0)
+
+accuracy = correct / total
+print(f"Test Accuracy Of ResNet18: {accuracy * 100:.2f}%")
+print(classification_report(all_labels, pretrained_pred, 
+      target_names=train_data.classes))
+
+plotting.plot_class_accuracy(all_labels, "Homemade Model", homemade_preds, train_data.classes)
+plotting.plot_class_accuracy(all_labels, "ResNet18 Model", pretrained_pred, train_data.classes)
