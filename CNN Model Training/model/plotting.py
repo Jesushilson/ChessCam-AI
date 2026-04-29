@@ -1,4 +1,4 @@
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -19,8 +19,7 @@ def plot_class_accuracy(all_labels, model_name ,all_preds, class_names):
         accuracies.append(report[class_name]['recall'])
     
     # Plot
-    colors = ['green' if acc >= 0.8 else 'orange' if acc >= 0.6 else 'red' 
-              for acc in accuracies]
+    colors = ['green' if acc >= 0.8 else 'orange' if acc >= 0.6 else 'red' for acc in accuracies]
     
     plt.figure(figsize=(12, 6))
     bars = plt.bar(classes, accuracies, color=colors)
@@ -30,6 +29,7 @@ def plot_class_accuracy(all_labels, model_name ,all_preds, class_names):
         plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
                 f'{acc*100:.1f}%', ha='center', va='bottom', fontsize=9)
     
+    # Create the graph
     plt.xlabel(f'Chess Piece Class - {model_name}')
     plt.ylabel('Recall (Per Class Accuracy)')
     plt.title('Per Class Accuracy of Piece Classifier')
@@ -64,6 +64,37 @@ def plot_comparison(homemade_losses, homemade_accs, pretrained_losses, pretraine
     ax2.legend()
     ax2.grid(True)
 
+    # Create the graph
     plt.suptitle('Homemade CNN vs ResNet18', fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.show()
+
+def plot_confusion_matrix(all_labels, all_preds, class_names, model_name):
+    cm = confusion_matrix(all_labels, all_preds)
+    
+    # Normalize to percentages
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    
+    fig, ax = plt.subplots(figsize=(14, 12))
+    
+    im = ax.imshow(cm_normalized, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.colorbar(im)
+    
+    # Add labels
+    ax.set_xticks(np.arange(len(class_names)))
+    ax.set_yticks(np.arange(len(class_names)))
+    ax.set_xticklabels(class_names, rotation=45, ha='right')
+    ax.set_yticklabels(class_names)
+    
+    # Add numbers inside each cell
+    for i in range(len(class_names)):
+        for j in range(len(class_names)):
+            value = cm_normalized[i, j]
+            color = 'white' if value > 0.5 else 'black'
+            ax.text(j, i, f'{value:.0%}', ha='center', va='center', color=color, fontsize=8)
+    
+    ax.set_xlabel('Predicted Label')
+    ax.set_ylabel('True Label')
+    ax.set_title(f'Confusion Matrix — {model_name}')
     plt.tight_layout()
     plt.show()

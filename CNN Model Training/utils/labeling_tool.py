@@ -233,7 +233,7 @@ def check_labels():
     squares = cut_into_squares(board_images)
     for square in squares:
         labeling_tool(square)
-    # Split the data
+    # Split the data into folders and subfolders
     split_data()
     # Augment the data
     splits_dict = {

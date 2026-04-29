@@ -64,7 +64,7 @@ def load_or_select_corners(image, img_path):
 
     return corners
 
-# Deletes the saved corners
+# Deletes the saved corner
 def delete_corners(image_path):
     image_name = os.path.basename(image_path)
     

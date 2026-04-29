@@ -7,6 +7,7 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 import numpy as np
 import plotting
+import time
 
 
 TRAIN_FOLDER = "data/squares/train"
@@ -96,17 +97,23 @@ pretrained_optimizer = torch.optim.Adam(pretrained_model.parameters(), lr= 0.001
 EPOCHS = 40
 
 
-# Lets start with my model
+# Lets start with homemade model
 print("----STARTING HOMEMADE TRAINING----")
+start = time.time()
 homemade_losses, homemade_accs = train_model(homemade_model, homemade_optimizer, EPOCHS)
 print("----HOMEMADE DONE----")
+homemade_time = time.time() - start
+print(f"Homemade training time: {homemade_time/60:.1f} minutes")
 
 print("----STARTING ResNet18 TRAINING----")
+start = time.time()
 pretrained_losses, pretrained_accs = train_model(pretrained_model, pretrained_optimizer, EPOCHS)
 print("----ResNet18 DONE----")
+resnet_time = time.time() - start
+print(f"ResNet18 training time: {resnet_time/60:.1f} minutes")
 
 
-# Plot both on same graph
+# Plot both on the same graph
 plotting.plot_comparison(homemade_losses, homemade_accs, pretrained_losses, pretrained_accs)
 
 # ----------Start Testing----------
@@ -158,5 +165,15 @@ print(f"Test Accuracy Of ResNet18: {accuracy * 100:.2f}%")
 print(classification_report(all_labels, pretrained_pred, 
       target_names=train_data.classes))
 
+# Plot based on test accuracy across classes
 plotting.plot_class_accuracy(all_labels, "Homemade Model", homemade_preds, train_data.classes)
 plotting.plot_class_accuracy(all_labels, "ResNet18 Model", pretrained_pred, train_data.classes)
+
+# Check confusion matrix 
+plotting.plot_confusion_matrix(all_labels, homemade_preds, train_data.classes, "Homemade CNN")
+plotting.plot_confusion_matrix(all_labels, pretrained_pred, train_data.classes, "ResNet18")
+
+
+# Save
+torch.save(homemade_model.state_dict(), "homemade_model.pth")
+torch.save(pretrained_model.state_dict(), "resnet_model.pth")
